@@ -12,6 +12,7 @@ import org.apache.spark.SparkContext
 import org.apache.spark.SparkContext._
 import org.apache.spark.SparkConf
 import org.apache.spark._
+
 import org.apache.log4j.{Level, Logger}
 
 import org.apache.spark.sql.{Dataset, SparkSession}
@@ -20,6 +21,8 @@ import org.apache.spark.streaming.kafka010._
 import scala.collection.JavaConverters._
 import org.apache.spark.streaming.kafka010.LocationStrategies.PreferConsistent
 import org.apache.spark.streaming.kafka010.ConsumerStrategies.Subscribe
+
+import scalaj.http._
 
 object MainApp {
 
@@ -31,7 +34,7 @@ object MainApp {
 
   def main(args: Array[String]) {
 
-    val records = getRecords()
+    val records = getRecordsFromSource()
 
     val config = new SparkConf()
       .setAppName("Spark App")
@@ -47,7 +50,14 @@ object MainApp {
 
     val recordsDs: Dataset[String] = sparkSession.createDataset(records)
 
-    recordsDs.show()
+    println("processing records")
+    recordsDs.foreach { record =>
+      println(record)
+      val response: HttpResponse[String] = Http("http://foo.com/search").param("q","monkeys").asString
+      println(response)
+    }
+
+
 
     import scala.pickling.Defaults._
     import scala.pickling.json._
@@ -93,9 +103,9 @@ object MainApp {
 //    println("Lines with a: %s, Lines with b: %s".format(numAs, numBs))
   }
 
-  private def getRecords(): List[String] = {
+  private def getRecordsFromSource(): List[String] = {
     val kafkaConsumer = new KafkaConsumerWrapper
-    val recordsValues: List[String] = kafkaConsumer.poll(60 seconds, 1)
+    val recordsValues: List[String] = kafkaConsumer.poll(10 seconds, 1)
     kafkaConsumer.stopConsumer()
     recordsValues
   }
