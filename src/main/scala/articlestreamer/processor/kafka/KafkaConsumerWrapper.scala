@@ -1,4 +1,4 @@
-package processor.kafka
+package articlestreamer.processor.kafka
 
 import java.util
 import java.util.{UUID, Properties}

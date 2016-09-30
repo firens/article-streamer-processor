@@ -1,9 +1,10 @@
-package processor
+package articlestreamer.processor
 
 import _root_.kafka.serializer.{StringEncoder, StringDecoder}
+import articlestreamer.processor.kafka.KafkaConsumerWrapper
+import articlestreamer.shared.model.{TwitterArticle, BaseArticle, Article}
 import com.typesafe.config.ConfigFactory
 import org.apache.kafka.common.serialization.{StringDeserializer, StringSerializer}
-import processor.kafka.KafkaConsumerWrapper
 
 import scala.concurrent.duration._
 
@@ -23,6 +24,9 @@ import org.apache.spark.streaming.kafka010.LocationStrategies.PreferConsistent
 import org.apache.spark.streaming.kafka010.ConsumerStrategies.Subscribe
 
 import scalaj.http._
+
+import scala.pickling.Defaults._
+import scala.pickling.json._
 
 object MainApp {
 
@@ -50,17 +54,17 @@ object MainApp {
 
     val recordsDs: Dataset[String] = sparkSession.createDataset(records)
 
-    println("processing records")
     recordsDs.foreach { record =>
       println(record)
-      val response: HttpResponse[String] = Http("http://foo.com/search").param("q","monkeys").asString
-      println(response)
+      record.unpickle[Article] match {
+        case twitter: TwitterArticle => println("found twitter article")
+        case basic: BaseArticle => println("found basic article")
+        case unknown =>
+          System.err.println(s"Failed to parse article, found type [${unknown.getClass.getCanonicalName}]")
+      }
+      //val response: HttpResponse[String] = Http("http://foo.com/search").param("q","monkeys").asString
+      //println(response)
     }
-
-
-
-    import scala.pickling.Defaults._
-    import scala.pickling.json._
 
 
 //    val ssc = new StreamingContext(config, Seconds(1))
