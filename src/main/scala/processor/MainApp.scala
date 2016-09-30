@@ -14,7 +14,7 @@ import org.apache.spark.SparkConf
 import org.apache.spark._
 import org.apache.log4j.{Level, Logger}
 
-import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.{Dataset, SparkSession}
 import org.apache.spark.streaming._
 import org.apache.spark.streaming.kafka010._
 import scala.collection.JavaConverters._
@@ -31,6 +31,8 @@ object MainApp {
 
   def main(args: Array[String]) {
 
+    val records = getRecords()
+
     val config = new SparkConf()
       .setAppName("Spark App")
       .setMaster("local[2]")
@@ -43,13 +45,13 @@ object MainApp {
 
     import sparkSession.implicits._
 
-    val kafkaConsumer = new KafkaConsumerWrapper
-    val recordsValues: List[String] = kafkaConsumer.poll(60 seconds, 1)
-    kafkaConsumer.stopConsumer()
-
-    val recordsDs = sparkSession.createDataset(recordsValues)
+    val recordsDs: Dataset[String] = sparkSession.createDataset(records)
 
     recordsDs.show()
+
+    import scala.pickling.Defaults._
+    import scala.pickling.json._
+
 
 //    val ssc = new StreamingContext(config, Seconds(1))
 //
@@ -90,6 +92,14 @@ object MainApp {
 //    val numBs = logData.filter(line => line.contains("b")).count()
 //    println("Lines with a: %s, Lines with b: %s".format(numAs, numBs))
   }
+
+  private def getRecords(): List[String] = {
+    val kafkaConsumer = new KafkaConsumerWrapper
+    val recordsValues: List[String] = kafkaConsumer.poll(60 seconds, 1)
+    kafkaConsumer.stopConsumer()
+    recordsValues
+  }
+
 }
 
 
