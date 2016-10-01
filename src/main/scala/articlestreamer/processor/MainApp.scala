@@ -1,7 +1,9 @@
 package articlestreamer.processor
 
 import _root_.kafka.serializer.{StringEncoder, StringDecoder}
+import articlestreamer.processor.marshalling.ArticleMarshaller
 import articlestreamer.processor.kafka.KafkaConsumerWrapper
+import articlestreamer.processor.service.TwitterService
 import articlestreamer.shared.model.{TwitterArticle, BaseArticle, Article}
 import com.typesafe.config.ConfigFactory
 import org.apache.kafka.common.serialization.{StringDeserializer, StringSerializer}
@@ -23,12 +25,7 @@ import scala.collection.JavaConverters._
 import org.apache.spark.streaming.kafka010.LocationStrategies.PreferConsistent
 import org.apache.spark.streaming.kafka010.ConsumerStrategies.Subscribe
 
-import scalaj.http._
-
-import scala.pickling.Defaults._
-import scala.pickling.json._
-
-object MainApp {
+object MainApp extends ArticleMarshaller with TwitterService {
 
   private val appConfig = ConfigFactory.load()
   val topic = appConfig.getString("kafka.topic")
@@ -38,33 +35,27 @@ object MainApp {
 
   def main(args: Array[String]) {
 
-    val records = getRecordsFromSource()
-
-    val config = new SparkConf()
-      .setAppName("Spark App")
-      .setMaster("local[2]")
-      .set("spark.streaming.stopGracefullyOnShutdown","true")
-
-    val sparkSession = SparkSession
-      .builder()
-      .config(config)
-      .getOrCreate()
-
-    import sparkSession.implicits._
-
-    val recordsDs: Dataset[String] = sparkSession.createDataset(records)
-
-    recordsDs.foreach { record =>
-      println(record)
-      record.unpickle[Article] match {
-        case twitter: TwitterArticle => println("found twitter article")
-        case basic: BaseArticle => println("found basic article")
-        case unknown =>
-          System.err.println(s"Failed to parse article, found type [${unknown.getClass.getCanonicalName}]")
-      }
-      //val response: HttpResponse[String] = Http("http://foo.com/search").param("q","monkeys").asString
-      //println(response)
-    }
+//    val records = getRecordsFromSource()
+//
+//    val config = new SparkConf()
+//      .setAppName("Spark App")
+//      .setMaster("local[2]")
+//      .set("spark.streaming.stopGracefullyOnShutdown","true")
+//
+//    val sparkSession = SparkSession
+//      .builder()
+//      .config(config)
+//      .getOrCreate()
+//
+//    import sparkSession.implicits._
+//
+//    val recordsDs: Dataset[String] = sparkSession.createDataset(records)
+//
+//    recordsDs.foreach { record =>
+//      val article: Option[Article] = unmarshallArticle(record)
+//
+//      //println(response)
+//    }
 
 
 //    val ssc = new StreamingContext(config, Seconds(1))

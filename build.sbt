@@ -20,3 +20,6 @@ libraryDependencies += "org.scala-lang.modules" %% "scala-pickling" % "0.10.1"
 
 libraryDependencies +=  "org.scalaj" %% "scalaj-http" % "2.3.0"
 
+libraryDependencies += "org.twitter4j" % "twitter4j-stream" % "[4.0,)"
+
+
