@@ -1,5 +1,6 @@
 package articlestreamer.processor.marshalling
 
+import articlestreamer.shared.exception.exceptions._
 import articlestreamer.shared.model.{BaseArticle, TwitterArticle, Article}
 
 import scala.pickling.Defaults._
@@ -19,7 +20,7 @@ trait ArticleMarshaller {
       }
     } catch {
       case ex: Exception => {
-        System.err.println(s"Failed to parse article, exception thrown. $ex")
+        System.err.println(s"Failed to parse article, exception thrown. \n ${ex.getStackTraceAsString}")
         None
       }
     }
